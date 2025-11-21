@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Today Deltas – Q Drops Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Favicon: put favicon.ico or favicon.png in the repo root -->
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <!-- or: <link rel="icon" href="/favicon.ico" /> -->
+
+  <style>
+    :root {
+      --header-height: 120px;
+      --bg: #040509;
+      --bg-alt: #0a0c13;
+      --accent-red: #ff2255;
+      --accent-blue: #18a4ff;
+      --accent-white: #f5f5f5;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      background: radial-gradient(circle at top left, #151829 0, #040509 55%);
+      color: var(--accent-white);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden; /* No outer scrollbars */
+    }
+
+    header {
+      position: relative;
+      height: var(--header-height);
+      padding: 16px 24px;
+      background: radial-gradient(circle at top left, #151829 0, #05060f 60%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+      overflow: hidden;
+    }
+
+    .header-inner {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .brand-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .tagline {
+      font-size: 0.7rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #9ca3af;
+      opacity: 0.9;
+    }
+
+    .brand {
+      font-size: 1.65rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: baseline;
+      gap: 0.35rem;
+    }
+
+    .brand span:first-child {
+      color: var(--accent-white);
+      text-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+    }
+
+    .brand span:last-child {
+      color: var(--accent-blue);
+      text-shadow: 0 0 12px rgba(24, 164, 255, 0.8);
+    }
+
+    .subline {
+      font-size: 0.8rem;
+      color: #d1d5db;
+      opacity: 0.9;
+    }
+
+    .subline strong {
+      color: var(--accent-red);
+      text-shadow: 0 0 8px rgba(255, 34, 85, 0.8);
+    }
+
+    .operator-block {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      text-align: right;
+    }
+
+    .handle-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo,
+        Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 0.85rem;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: radial-gradient(circle at top, rgba(0, 0, 0, 0.8), #020617);
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      box-shadow:
+        0 0 12px rgba(15, 23, 42, 0.9),
+        0 0 22px rgba(24, 164, 255, 0.4);
+    }
+
+    .handle-row .cherry {
+      font-size: 1.1rem;
+      filter: drop-shadow(0 0 6px rgba(236, 72, 153, 0.9));
+    }
+
+    .handle-row a {
+      color: #e5e7eb;
+      text-decoration: none;
+      position: relative;
+    }
+
+    .handle-row a::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -1px;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(
+        to right,
+        var(--accent-red),
+        var(--accent-blue)
+      );
+      opacity: 0.65;
+      transform-origin: left;
+      transform: scaleX(0.8);
+      transition: transform 160ms ease-out, opacity 160ms ease-out;
+    }
+
+    .handle-row a:hover::after {
+      transform: scaleX(1);
+      opacity: 1;
+    }
+
+    .handle-caption {
+      font-size: 0.7rem;
+      color: #9ca3af;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    /* Neon swoosh overlay */
+    .swoosh {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      mix-blend-mode: screen;
+      opacity: 0.7;
+    }
+
+    .swoosh::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: -60%;
+      width: 220%;
+      height: 260%;
+      transform: translate(-8%, -50%) skewX(-14deg);
+      background: linear-gradient(
+        110deg,
+        rgba(0, 0, 0, 0) 0%,
+        rgba(255, 0, 64, 0.0) 8%,
+        rgba(255, 0, 64, 0.7) 18%,
+        rgba(255, 255, 255, 0.8) 40%,
+        rgba(65, 205, 255, 0.9) 65%,
+        rgba(0, 0, 0, 0) 100%
+      );
+      filter: blur(12px);
+      animation: swoosh 5.5s linear infinite;
+    }
+
+    @keyframes swoosh {
+      0% {
+        transform: translate(15%, -50%) skewX(-14deg);
+      }
+      100% {
+        transform: translate(-75%, -50%) skewX(-14deg);
+      }
+    }
+
+    main {
+      flex: 1;
+      min-height: 0;
+      background: radial-gradient(circle at center, #020617 0, #020617 60%);
+    }
+
+    iframe {
+      border: none;
+      width: 100%;
+      height: calc(100vh - var(--header-height));
+      display: block;
+      background: transparent;
+    }
+
+    /* Try to suppress iframe scrollbars on host page */
+    iframe::-webkit-scrollbar {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      :root {
+        --header-height: 130px;
+      }
+
+      header {
+        padding: 10px 14px;
+      }
+
+      .header-inner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .operator-block {
+        align-items: flex-start;
+        text-align: left;
+      }
+
+      .brand {
+        font-size: 1.35rem;
+      }
+
+      iframe {
+        height: calc(100vh - var(--header-height));
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="swoosh"></div>
+
+    <div class="header-inner">
+      <div class="brand-block">
+        <div class="tagline"> Psychological Operations · Signal Intelligence </div>
+        <div class="brand">
+          <span>Today</span><span>Deltas</span>
+        </div>
+        <div class="subline">
+          Live render of <strong>Q Drops Master</strong> · Cached, themed &amp; weaponized for the timeline.
+        </div>
+      </div>
+
+      <div class="operator-block">
+        <div class="handle-row">
+          <span class="cherry">🍒</span>
+          <a href="https://x.com/SleazyWeez" target="_blank" rel="noopener noreferrer">
+            @SleazyWeez
+          </a>
+        </div>
+        <div class="handle-caption">Fred "Rerun" Cherry · Theater Commander</div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Your Google Apps Script web app embedded in an iframe -->
+    <iframe
+      src="https://script.google.com/macros/s/AKfybIUlYUaw7w8Bw9F0Cn3OEbSgypx2ZAg1mhrnX4b7XgMf4V6gvfDy53aqcSRSYyMH7VCA/exec"
+      loading="eager"
+      scrolling="no"
+      referrerpolicy="no-referrer-when-downgrade"
+    ></iframe>
+  </main>
+</body>
+</html>
