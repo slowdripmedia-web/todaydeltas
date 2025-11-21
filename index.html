@@ -245,6 +245,19 @@
 </head>
 
 <body>
+  <script>
+  (function () {
+    var host = window.location.hostname.toLowerCase();
+    if (host === "www.todaydeltas.com") {
+      var target = "https://todaydeltas.com"
+        + window.location.pathname
+        + window.location.search
+        + window.location.hash;
+      window.location.replace(target);
+    }
+  })();
+</script>
+
   <header>
     <div class="swoosh"></div>
 
